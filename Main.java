@@ -1,6 +1,7 @@
 package converter;
 
 import java.util.Arrays;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 interface IFractionPart<N extends Number> {
@@ -8,6 +9,66 @@ interface IFractionPart<N extends Number> {
 }
 
 public class Main {
+
+    private static class Input {
+        final Scanner scanner;
+        String number;
+        int base;
+        int toBase;
+
+        private Input(Scanner scanner) {
+            this.scanner = scanner;
+        }
+
+        public void read() {
+            tryReadBase();
+            tryReadNumber();
+            tryReadToBase();
+        }
+
+        private void tryReadNumber() {
+            try {
+                this.number = this.scanner.next();
+            } catch (Exception exception) {
+                throw new InputMismatchException("There was an error reading the number!");
+            }
+
+            if (!this.number.matches("^[a-zA-Z0-9]*\\.?[a-zA-Z0-9]*$")){
+                throw new InputMismatchException("There was an error reading the number! " +
+                                                 "The number is not a number.");
+            }
+        }
+
+        private void tryReadBase() {
+            try {
+                this.base = this.scanner.nextInt();
+
+                validateBase(this.base);
+            } catch (Exception exception) {
+                throw new InputMismatchException("There was an error reading the base for the number!");
+            }
+        }
+
+        private void tryReadToBase() {
+            try {
+                this.toBase = this.scanner.nextInt();
+
+                validateBase(this.toBase);
+            }
+            catch (Exception exception) {
+                throw new InputMismatchException("There was an error reading the base for converting the number!");
+            }
+        }
+
+        private void validateBase(int base) {
+            if (base < 1) {
+                throw new IllegalArgumentException("There was an error ! Base is less than 1.");
+            }
+            if (base > Character.MAX_RADIX) {
+                throw new IllegalArgumentException("There was an error ! Base is more than " + Character.MAX_RADIX + ".");
+            }
+        }
+    }
 
     private static class Fraction {
 
@@ -237,13 +298,17 @@ public class Main {
 
     public static void main(String[] args) {
         var scanner = new Scanner(System.in);
+        var input = new Input(scanner);
 
-        int sourceRadix = scanner.nextInt();
-        String stringNumber = scanner.next();
-        int targetRadix = scanner.nextInt();
+        try {
+            input.read();
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+            return;
+        }
 
-        var fraction = new Fraction(stringNumber, sourceRadix);
-        String convertedFraction = fraction.convert(targetRadix);
+        var fraction = new Fraction(input.number, input.base);
+        String convertedFraction = fraction.convert(input.toBase);
 
         System.out.println(convertedFraction);
     }
